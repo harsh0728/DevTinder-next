@@ -2,7 +2,6 @@ export interface User{
     _id:string;
     name:string;
     email:string;
-    password:string;
     profilePic?:string;
     bio?:string;
     skills?:string[];
@@ -25,8 +24,3 @@ export interface ConnectionRequest{
     updatedAt:string;
 }
 
-export interface ApiResponse<T>{
-    success:boolean;
-    data?:T;
-    message?:string
-}
