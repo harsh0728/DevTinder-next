@@ -12,7 +12,7 @@ export default function Home() {
   useEffect(() => {
     router.replace(user ? "/feed" : "/login");
   }, [user, router]);
-
+  
   return (
     <div className="bg-navy-950 min-h-screen bg-linear-to-br from-slate-950 via-indigo-950 to-slate-950">
       {user && <Navbar />}
