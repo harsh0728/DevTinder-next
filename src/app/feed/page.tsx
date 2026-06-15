@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { removeUserFromFeed, setFeed } from "@/store/slices/feedSlice";
 import { ApiResponse } from "@/types/api-types";
 import { FeedData } from "@/types/feed";
-import { ConnectionRequest } from "@/types/request";
+import { ConnectionRequestState } from "@/types/request";
 import { Heart, Loader, X } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
@@ -44,7 +44,7 @@ export default function FeedPage() {
 
     dispatch(removeUserFromFeed(userId));
     try {
-      await apiFetch<ApiResponse<ConnectionRequest>>(
+      await apiFetch<ApiResponse<ConnectionRequestState>>(
         `/request/send/${userId}`,
         {
           method: "POST",
