@@ -1,14 +1,18 @@
-export interface User{
-    _id:string;
-    name:string;
-    email:string;
-    profilePic?:string;
-    bio?:string;
-    skills?:string[];
-    experience?:string;
-    location?:string;
-    createdAt:string;
-    updatedAt:string;
+export interface User {
+  _id: string;
+  firstName: string;
+  lastName?: string;
+  email?: string;
+  // password — never include this in frontend types
+  age?: number;
+  gender?: string;
+  about?: string;
+  photoUrl?: string;
+  skills?: string[];
+  isPremium?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  // __v — optional, only if you actually use it somewhere
 }
 
 export interface ConnectedUser extends User{
