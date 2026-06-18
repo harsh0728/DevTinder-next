@@ -5,6 +5,8 @@ import { Edit2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import ProfileField from "@/components/ProfileField";
+import ChangePasswordPage from "../change-password/page";
+import Link from "next/link";
 
 export default function ProfilePage() {
   const user = useAppSelector((state) => state.user.user);
@@ -72,6 +74,20 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
+          {/* <div className="">
+            <Link href={"/change-password"}>
+              <ChangePasswordPage/>
+            </Link>
+          </div> */}
+          {/* Change Password */}
+            <div className="flex justify-end">
+              <Link
+                href="/change-password"
+                className="text-slate-200 text-md font-bold  hover:text-indigo-400 transition"
+              >
+                Change Your Password
+              </Link>
+            </div>
 
         </div>
       </div>
