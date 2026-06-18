@@ -15,6 +15,7 @@ import { addUser } from "@/store/slices/userSlice";
 import { apiFetch } from "@/lib/api";
 import { ApiResponse } from "@/types/api-types";
 import { User } from "@/types/user";
+import GoogleLoginButton from "@/components/GoogleLoginButton";
 
 const loginSchema = z.object({
   email: z.email("Invalid email address"),
@@ -165,6 +166,8 @@ export default function LoginPage() {
               {loading ? <Loader className="animate-spin" size={20} /> : "Login"}
             </button>
           </form>
+
+              <GoogleLoginButton/>
 
           {/* Divider */}
           <div className="my-6 relative">
