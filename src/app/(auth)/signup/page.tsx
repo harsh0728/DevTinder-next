@@ -19,9 +19,9 @@ const signupSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   gender: z.enum(["male", "female", "other"], {
-    errorMap: () => ({ message: "Please select a gender" }),
+    message: "Please select a gender" ,
   }),
-  age: z.coerce.number().min(10, "Must be at least 10").max(100, "Invalid age"),
+  age: z.number().min(10, "Must be at least 10").max(100, "Invalid age"),
 });
 
 type SignupForm = z.infer<typeof signupSchema>;
