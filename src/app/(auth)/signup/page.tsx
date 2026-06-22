@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { Resolver, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ChevronLeft, Eye, EyeOff, Loader, AlertCircle } from "lucide-react";
@@ -21,9 +21,10 @@ const signupSchema = z.object({
   gender: z.enum(["male", "female", "other"], {
     message: "Please select a gender" ,
   }),
-  age: z.number().min(10, "Must be at least 10").max(100, "Invalid age"),
+  age: z.coerce.number().min(10, "Must be at least 10").max(100, "Invalid age"),
 });
 
+// ✅ Output type (after Zod parses) — age is number
 type SignupForm = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
@@ -36,8 +37,8 @@ export default function SignupPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<SignupForm>({
-    resolver: zodResolver(signupSchema),
+  } = useForm<SignupForm,unknown,SignupForm>({
+    resolver: zodResolver(signupSchema) as Resolver<SignupForm>,
   });
 
   const handleSignup = async (data: SignupForm) => {
