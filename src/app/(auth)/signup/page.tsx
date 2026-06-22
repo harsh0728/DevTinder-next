@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Resolver, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ChevronLeft, Eye, EyeOff, Loader, AlertCircle } from "lucide-react";
@@ -21,21 +21,9 @@ const signupSchema = z.object({
   gender: z.enum(["male", "female", "other"], {
     message: "Please select a gender" ,
   }),
-  age: z.coerce.number().min(10, "Must be at least 10").max(100, "Invalid age"),
+  age: z.number().min(10, "Must be at least 10").max(100, "Invalid age"),
 });
 
-// ✅ Explicitly tell RHF what the INPUT type looks like (age is string from HTML)
-
-type SignupFormInput={
-  firstName:string;
-  lastName:string;
-  email:string;
-  password:string;
-  gender:"male" | "female" | "other";
-  age:number | string;
-}
-
-// ✅ Output type (after Zod parses) — age is number
 type SignupForm = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
@@ -48,8 +36,8 @@ export default function SignupPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<SignupForm,unknown,SignupForm>({
-    resolver: zodResolver(signupSchema) as Resolver<SignupForm>,
+  } = useForm<SignupForm>({
+    resolver: zodResolver(signupSchema),
   });
 
   const handleSignup = async (data: SignupForm) => {
@@ -202,7 +190,7 @@ export default function SignupPage() {
                 <input
                   type="number"
                   placeholder="25"
-                  {...register("age",{ valueAsNumber: true })}
+                  {...register("age")}
                   className={`w-full px-4 py-3 rounded-lg bg-slate-800/50 border transition ${
                     errors.age
                       ? "border-red-500/60"
