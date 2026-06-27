@@ -9,7 +9,10 @@ export default function Home() {
   const router = useRouter();
   const user = useAppSelector((state) => state.user.user);
 
-  redirect("/login")
+  if (user){
+    redirect("/feed")
+  }
+  else redirect("/login")
   // useEffect(() => {
   //   router.replace(user ? "/feed" : "/login");
   // }, [user, router]);
