@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { AlertCircle, Eye, EyeOff, Loader } from "lucide-react";
@@ -29,6 +29,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string>("");
   const [showPassword, setShowPassword] = useState(false);
 
+  const user=useAppSelector((store)=>store.user.user)
   const dispatch = useAppDispatch();
   const router = useRouter();
 
@@ -67,7 +68,9 @@ export default function LoginPage() {
     }
   };
 
-  return (
+  if (user) redirect("/feed")
+
+  return !user && (
     <div className="min-h-screen flex items-center justify-center">
       <div className="w-full max-w-md">
         <div className="bg-slate-900/50 backdrop-blur-xl border border-indigo-500/20 rounded-2xl p-8">
