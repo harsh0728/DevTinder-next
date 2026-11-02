@@ -73,6 +73,14 @@ export default function FeedPage() {
     fetchFeed();
   }, [fetchFeed]);
 
+  // Auto-load more profiles when user reaches near the end (infinite scroll)
+  useEffect(() => {
+    if (hasMore && !loadingMore && nextCursor && current >= effectiveFeed.length - 3) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadMoreFeed();
+    }
+  }, [current, effectiveFeed.length, hasMore, loadingMore, nextCursor, loadMoreFeed]);
+
   const handleAction = async (status: "interested" | "ignored") => {
     // Prevent double submissions
     if (isProcessing || current >= effectiveFeed.length) return;
