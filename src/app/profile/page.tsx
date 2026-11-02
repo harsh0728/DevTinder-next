@@ -37,12 +37,24 @@ export default function ProfilePage() {
           {/* Photo */}
           <div className="w-full h-48 bg-gradient-to-br from-indigo-600 to-cyan-600 rounded-xl flex items-center justify-center text-7xl overflow-hidden relative">
             {user.photoUrl ? (
-              <Image
-                src={user.photoUrl}
-                alt="Profile"
-                fill
-                className="object-cover"
-              />
+              <>
+                <Image
+                  src={user.photoUrl}
+                  alt="Profile"
+                  fill
+                  sizes="100%"
+                  className="object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    if (e.currentTarget.nextElementSibling) {
+                      (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
+                    }
+                  }}
+                />
+                <div className="w-full h-full flex items-center justify-center text-7xl" style={{display: 'flex'}}>
+                  👤
+                </div>
+              </>
             ) : (
               "👤"
             )}
