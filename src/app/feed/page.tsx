@@ -8,7 +8,7 @@ import { FeedData } from "@/types/feed";
 import { ConnectionRequestState } from "@/types/request";
 import { Heart, Loader, X } from "lucide-react";
 import Image from "next/image";
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 
 export default function FeedPage() {
   const [current, setCurrent] = useState(0);
@@ -23,11 +23,10 @@ export default function FeedPage() {
   // For pagination, we'll use a local state that tracks all loaded profiles
   const [allFeedProfiles, setAllFeedProfiles] = useState<FeedData[]>([]);
 
-  useEffect(() => {
-    // Sync with Redux state on initial load
-    if (feed.length > 0 && allFeedProfiles.length === 0) {
-      setAllFeedProfiles(feed);
-    }
+  // Derived state - use Redux feed when available, otherwise local state
+  // This avoids the need for a sync effect
+  const effectiveFeed = useMemo(() => {
+    return feed.length > 0 ? feed : allFeedProfiles;
   }, [feed, allFeedProfiles]);
 
   const fetchFeed = useCallback(async (cursor?: string) => {
@@ -70,22 +69,15 @@ export default function FeedPage() {
   }, [fetchFeed, hasMore, loadingMore, nextCursor]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchFeed();
   }, [fetchFeed]);
 
-  // Auto-load more profiles when user reaches near the end (Instagram-like behavior)
-  useEffect(() => {
-    // Auto-load more when user is within 3 profiles of the end
-    if (hasMore && !loadingMore && nextCursor && current >= allFeedProfiles.length - 3) {
-      loadMoreFeed();
-    }
-  }, [current, allFeedProfiles.length, hasMore, loadingMore, nextCursor, loadMoreFeed]);
-
   const handleAction = async (status: "interested" | "ignored") => {
     // Prevent double submissions
-    if (isProcessing || current >= allFeedProfiles.length) return;
+    if (isProcessing || current >= effectiveFeed.length) return;
 
-    const userId = allFeedProfiles[current]._id;
+    const userId = effectiveFeed[current]._id;
     setIsProcessing(true);
 
     dispatch(removeUserFromFeed(userId));
@@ -114,7 +106,7 @@ export default function FeedPage() {
     );
   }
 
-  if (allFeedProfiles.length === 0 || current >= allFeedProfiles.length) {
+  if (effectiveFeed.length === 0 || current >= effectiveFeed.length) {
     return (
       <div className="flex flex-col items-center justify-center h-96 gap-4">
         <div className="text-6xl">🎉</div>
@@ -124,7 +116,7 @@ export default function FeedPage() {
     );
   }
 
-  const dev = allFeedProfiles[current];
+  const dev = effectiveFeed[current];
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
@@ -132,7 +124,7 @@ export default function FeedPage() {
 
         {/* Counter */}
         <div className="mb-4 text-center text-slate-400 text-sm font-medium">
-          Profile {current + 1} of {allFeedProfiles.length}
+          Profile {current + 1} of {effectiveFeed.length}
           {hasMore && <span className="text-indigo-400 ml-2">(+ more loading)</span>}
         </div>
 
@@ -214,9 +206,9 @@ export default function FeedPage() {
         )}
 
         {/* End of feed message */}
-        {!hasMore && allFeedProfiles.length > 0 && current >= allFeedProfiles.length - 1 && (
+        {!hasMore && effectiveFeed.length > 0 && current >= effectiveFeed.length - 1 && (
           <div className="mt-8 text-center text-slate-400 text-sm">
-            You've seen all available profiles!
+            You&apos;ve seen all available profiles!
           </div>
         )}
 

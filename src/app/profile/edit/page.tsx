@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Loader } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -20,20 +20,25 @@ export default function EditProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const [form, setForm] = useState<EditForm>({
+  // Initialize form with user data, or empty if user not loaded yet
+  const initialForm = useMemo(() => ({
     about: user?.about ?? "",
     skills: user?.skills?.join(", ") ?? "",
-  });
+  }), [user?.about, user?.skills]);
 
-  // sync form if user loads after mount (e.g. AuthProvider delay)
+  const [form, setForm] = useState<EditForm>(initialForm);
+
+  // Update form when user data changes (e.g. AuthProvider delay)
   useEffect(() => {
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm({
         about: user.about ?? "",
         skills: user.skills?.join(", ") ?? "",
       });
     }
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.about, user?.skills]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
