@@ -64,6 +64,39 @@ export default function ChatPage() {
     scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
+  // Load more messages (infinite scroll) - defined before useEffect that uses it
+  const loadMoreMessages = useCallback(async () => {
+    if (!targetUserId || loadingMore || !hasMore || !nextCursor) return;
+
+    setLoadingMore(true);
+    try {
+      const response = await apiFetchPaginated<ChatMessage>(`/chat/${targetUserId}`, nextCursor, 50);
+
+      if (response.success && Array.isArray(response.data)) {
+        const formattedChat = response.data.map((chat) => ({
+          _id: chat._id,
+          userId: chat.senderId._id,
+          firstName: chat.senderId.firstName,
+          message: chat.text,
+          timestamp: chat.createdAt,
+          edited: chat.createdAt !== chat.updatedAt,
+        }));
+
+        // Prepend older messages (they come in descending order from server)
+        setMessages((prev) => [...formattedChat.reverse(), ...prev]);
+
+        if (response.pagination) {
+          setHasMore(response.pagination.hasMore);
+          setNextCursor(response.pagination.nextCursor);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load more messages:", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [targetUserId, loadingMore, hasMore, nextCursor]);
+
   // Auto-scroll when messages change (only if at bottom)
   const scrollObserverRef = useRef<IntersectionObserver | null>(null);
   useEffect(() => {
@@ -86,15 +119,10 @@ export default function ChatPage() {
     return () => {
       scrollObserverRef.current?.disconnect();
     };
-  }, [messages, hasMore, loadingMore, nextCursor]);
+  }, [messages, hasMore, loadingMore, nextCursor, loadMoreMessages, scrollToBottom]);
 
   // Initialize socket connection and fetch data
   useEffect(() => {
-    if (!userId || !targetUserId) {
-      setError("Missing user information");
-      return;
-    }
-
     isMountedRef.current = true;
     let isInitialized = false;
 
@@ -280,39 +308,6 @@ export default function ChatPage() {
       }
     };
   }, [userId, targetUserId, user?.firstName, socket]);
-
-  // Load more messages (infinite scroll)
-  const loadMoreMessages = useCallback(async () => {
-    if (!targetUserId || loadingMore || !hasMore || !nextCursor) return;
-
-    setLoadingMore(true);
-    try {
-      const response = await apiFetchPaginated<ChatMessage>(`/chat/${targetUserId}`, nextCursor, 50);
-
-      if (response.success && Array.isArray(response.data)) {
-        const formattedChat = response.data.map((chat) => ({
-          _id: chat._id,
-          userId: chat.senderId._id,
-          firstName: chat.senderId.firstName,
-          message: chat.text,
-          timestamp: chat.createdAt,
-          edited: chat.createdAt !== chat.updatedAt,
-        }));
-
-        // Prepend older messages (they come in descending order from server)
-        setMessages((prev) => [...formattedChat.reverse(), ...prev]);
-
-        if (response.pagination) {
-          setHasMore(response.pagination.hasMore);
-          setNextCursor(response.pagination.nextCursor);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to load more messages:", err);
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [targetUserId, loadingMore, hasMore, nextCursor]);
 
   const handleSubmit = useCallback((e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

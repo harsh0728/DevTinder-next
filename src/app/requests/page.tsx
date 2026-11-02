@@ -58,6 +58,7 @@ export default function RequestsPage() {
   }, [fetchRequests, hasMore, loadingMore, nextCursor]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRequests();
   }, [fetchRequests]);
 

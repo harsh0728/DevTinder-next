@@ -1,7 +1,7 @@
 "use client";
 
 import { apiFetch } from "@/lib/api";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 // ✅ tell TypeScript window.Razorpay exists — loaded via script tag
 declare global {
@@ -50,16 +50,7 @@ interface OrderResponse {
 export default function PremiumPage() {
   const [isUserPremium, setIsUserPremium] = useState(false);
 
-  useEffect(() => {
-    verifyPremiumUser();
-    // ✅ load Razorpay script dynamically
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-  }, []);
-
-  const verifyPremiumUser = async () => {
+  const verifyPremiumUser = useCallback(async () => {
     try {
       const res = await apiFetch<PremiumVerifyResponse>("/payment/premium/verify");
       if (res.isPremium) {
@@ -68,7 +59,17 @@ export default function PremiumPage() {
     } catch (error) {
       console.error("Error fetching premium user: ", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    verifyPremiumUser();
+    // ✅ load Razorpay script dynamically
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+  }, [verifyPremiumUser]);
 
   const handleBuyClick = async (type: "gold" | "silver") => {
     try {
