@@ -1,37 +1,65 @@
 "use client";
 
-import { apiFetch } from "@/lib/api";
+import { apiFetch, apiFetchPaginated } from "@/lib/api";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { addRequests, removeRequest } from "@/store/slices/requestSlice";
-import { ApiResponse } from "@/types/api-types";
+import { PaginatedResponse } from "@/lib/api";
 import { ConnectionRequestState } from "@/types/request";
 import { Check, Loader, MessageCircle, X } from "lucide-react";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 
 export default function RequestsPage() {
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [requests, setRequests] = useState<ConnectionRequestState[]>([]);
   const dispatch = useAppDispatch();
-  const requests = useAppSelector((state) => state.requests);
 
-  useEffect(() => {
-    fetchRequests();
-  }, []);
+  const fetchRequests = useCallback(async (cursor?: string) => {
+    if (cursor) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
 
-  const fetchRequests = async () => {
     try {
-      const res = await apiFetch<ApiResponse<ConnectionRequestState[]>>(
-        "/user/request/received"
+      const res = await apiFetchPaginated<ConnectionRequestState>(
+        "/user/request/received",
+        cursor,
+        20
       );
       if (res.success && res.data) {
-        dispatch(addRequests(res.data));
+        if (cursor) {
+          setRequests((prev: ConnectionRequestState[]) => [...prev, ...res.data]);
+        } else {
+          dispatch(addRequests(res.data));
+          setRequests(res.data);
+        }
+
+        if (res.pagination) {
+          setHasMore(res.pagination.hasMore);
+          setNextCursor(res.pagination.nextCursor);
+        }
       }
     } catch (error) {
       console.error("Failed to load requests", error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  };
+  }, [dispatch]);
+
+  const loadMoreRequests = useCallback(() => {
+    if (hasMore && !loadingMore && nextCursor) {
+      fetchRequests(nextCursor);
+    }
+  }, [fetchRequests, hasMore, loadingMore, nextCursor]);
+
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
 
   // ✅ plain params instead of a destructured object — matches source
   const handleReview = async (requestId: string, status: "accepted" | "rejected") => {
@@ -41,6 +69,7 @@ export default function RequestsPage() {
         body: JSON.stringify({ status }),
       });
       dispatch(removeRequest(requestId));
+      setRequests(prev => prev.filter(r => r._id !== requestId));
     } catch (error) {
       console.error("Failed to review request", error);
     }
@@ -78,12 +107,24 @@ export default function RequestsPage() {
                   {/* Avatar */}
                   <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-600 to-cyan-600 flex items-center justify-center text-3xl flex-shrink-0 overflow-hidden relative">
                     {req.fromUserId.photoUrl ? (
-                      <Image
-                        src={req.fromUserId.photoUrl}
-                        alt={req.fromUserId.firstName}
-                        fill
-                        className="object-cover"
-                      />
+                      <>
+                        <Image
+                          src={req.fromUserId.photoUrl}
+                          alt={req.fromUserId.firstName}
+                          fill
+                          sizes="64px"
+                          className="object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            if (e.currentTarget.nextElementSibling) {
+                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
+                            }
+                          }}
+                        />
+                        <div className="w-full h-full flex items-center justify-center text-3xl" style={{display: 'none'}}>
+                          👤
+                        </div>
+                      </>
                     ) : (
                       "👤"
                     )}
@@ -129,6 +170,24 @@ export default function RequestsPage() {
               </div>
             </div>
           ))}
+
+          {/* Load More */}
+          {hasMore && !loadingMore && (
+            <div className="text-center py-4">
+              <button
+                onClick={loadMoreRequests}
+                className="px-6 py-2 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-400 hover:text-indigo-300 transition duration-200 font-medium"
+              >
+                Load More Requests
+              </button>
+            </div>
+          )}
+
+          {loadingMore && (
+            <div className="flex justify-center py-4">
+              <Loader className="animate-spin text-indigo-400" size={24} />
+            </div>
+          )}
         </div>
       )}
     </div>
